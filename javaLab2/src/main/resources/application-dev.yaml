@@ -1,0 +1,5 @@
+app:
+  data:
+    path: classpath:data/dev-users.csv
+    format: csv
+    limit: 3
