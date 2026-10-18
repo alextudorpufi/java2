@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: demo
+
+server:
+  port: 8081
+
+library:
+  policy: fixed
+  fixed-limit: 3
+  student-limit: 2
+  regular-limit: 3
+  premium-limit: 5
+  event-threshold: 2
+  demo-enabled: false
+
+app:
+  greeting: Hello, World!
+  data:
+    limit: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+

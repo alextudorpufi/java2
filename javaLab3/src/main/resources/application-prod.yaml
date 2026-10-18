@@ -1,0 +1,5 @@
+app:
+  data:
+    path: classpath:data/prod-users.json
+    format: json
+    limit: 2
