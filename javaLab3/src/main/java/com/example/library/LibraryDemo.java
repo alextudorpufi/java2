@@ -23,19 +23,30 @@ public class LibraryDemo implements CommandLineRunner {
     @Override
     public void run(String... args) {
         members.save(new Member(1, "Ana", Member.Role.PREMIUM));
-        int limit = borrowing.borrowingLimit(1);
-        for (int id = 1; id <= limit + 1; id++) {
+        // Six attempts demonstrate the default fixed (3), role-based (5), and Drools (5) limits.
+        for (int id = 1; id <= 6; id++) {
             books.save(new Book(id, "Book " + id));
-        }
-        for (int id = 1; id <= limit; id++) {
-            borrowing.borrowBook(1, id);
-        }
-        try {
-            borrowing.borrowBook(1, limit + 1);
-        } catch (BorrowingException error) {
-            log.info("Expected demo rejection: {}", error.getMessage());
+            attempt(1, id);
         }
         borrowing.returnBook(1, 1);
-        borrowing.borrowBook(1, limit + 1);
+        attempt(1, 1);
+
+        members.save(new Member(2, "Dan", Member.Role.STUDENT));
+        attempt(2, 1); // Already borrowed by Ana.
+        books.save(new Book(7, "Java Textbook", Book.Type.TEXTBOOK));
+        attempt(2, 7); // Drools gives textbooks seven days.
+        books.save(new Book(8, "Library Encyclopedia", Book.Type.REFERENCE));
+        attempt(2, 8); // Drools disallows reference books.
+    }
+
+    private void attempt(long memberId, long bookId) {
+        try {
+            Loan loan = borrowing.borrowBook(new BorrowingRequest(memberId, bookId));
+            log.info("Demo loan: memberId={}, bookId={}, borrowingDays={}, dueAt={}",
+                    memberId, bookId,
+                    java.time.Duration.between(loan.borrowedAt(), loan.dueAt()).toDays(), loan.dueAt());
+        } catch (BorrowingException error) {
+            log.info("Demo rejection: {}", error.getMessage());
+        }
     }
 }

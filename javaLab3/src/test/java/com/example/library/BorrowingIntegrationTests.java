@@ -57,20 +57,20 @@ class BorrowingIntegrationTests {
 
     @Test
     void borrowReturnAndThresholdEvent(CapturedOutput output) {
-        service.borrowBook(memberId, firstBook);
+        service.borrowBook(new BorrowingRequest(memberId, firstBook));
         assertThat(events.stream(BorrowingThresholdExceeded.class)).isEmpty();
-        service.borrowBook(memberId, secondBook);
+        service.borrowBook(new BorrowingRequest(memberId, secondBook));
         assertThat(events.stream(BorrowingThresholdExceeded.class)).singleElement().satisfies(event -> {
             assertThat(event.member().id()).isEqualTo(memberId);
             assertThat(event.book().id()).isEqualTo(secondBook);
             assertThat(event.activeLoans()).isEqualTo(2);
         });
-        assertThatThrownBy(() -> service.borrowBook(memberId, thirdBook))
+        assertThatThrownBy(() -> service.borrowBook(new BorrowingRequest(memberId, thirdBook)))
                 .isInstanceOf(BorrowingException.class).hasMessageContaining("limit reached");
         assertThat(loans.countByMemberId(memberId)).isEqualTo(2);
         service.returnBook(memberId, firstBook);
         assertThat(loans.findByBookId(firstBook)).isEmpty();
-        service.borrowBook(memberId, thirdBook);
+        service.borrowBook(new BorrowingRequest(memberId, thirdBook));
         assertThat(events.stream(BorrowingThresholdExceeded.class)).hasSize(2);
         assertThat(output).contains("operation=borrowBook", "operation=returnBook", "member=Ana",
                 "book=Clean Code", "executionMs=", "Failed operation=borrowBook", "Borrowing event:");
@@ -78,12 +78,12 @@ class BorrowingIntegrationTests {
 
     @Test
     void invalidOperationsLeaveLoansUnchanged(CapturedOutput output) {
-        assertThatThrownBy(() -> service.borrowBook(-1, firstBook))
+        assertThatThrownBy(() -> service.borrowBook(new BorrowingRequest(-1, firstBook)))
                 .isInstanceOf(BorrowingException.class).hasMessageContaining("Member not found");
-        assertThatThrownBy(() -> service.borrowBook(memberId, -1))
+        assertThatThrownBy(() -> service.borrowBook(new BorrowingRequest(memberId, -1)))
                 .isInstanceOf(BorrowingException.class).hasMessageContaining("Book not found");
-        service.borrowBook(memberId, firstBook);
-        assertThatThrownBy(() -> service.borrowBook(memberId, firstBook))
+        service.borrowBook(new BorrowingRequest(memberId, firstBook));
+        assertThatThrownBy(() -> service.borrowBook(new BorrowingRequest(memberId, firstBook)))
                 .isInstanceOf(BorrowingException.class).hasMessageContaining("already borrowed");
         long otherMember = ids.incrementAndGet();
         members.save(new Member(otherMember, "Dan", Member.Role.PREMIUM));
@@ -99,7 +99,7 @@ class BorrowingIntegrationTests {
 
     @Test
     void competingBorrowsCannotExceedMemberLimit() throws Exception {
-        service.borrowBook(memberId, firstBook);
+        service.borrowBook(new BorrowingRequest(memberId, firstBook));
         var start = new CountDownLatch(1);
         try (var executor = Executors.newFixedThreadPool(2)) {
             var one = executor.submit(() -> borrowAfter(start, secondBook));
@@ -130,7 +130,7 @@ class BorrowingIntegrationTests {
     private int borrowAfter(CountDownLatch start, long borrower, long bookId) throws InterruptedException {
         start.await();
         try {
-            service.borrowBook(borrower, bookId);
+            service.borrowBook(new BorrowingRequest(borrower, bookId));
             return 1;
         } catch (BorrowingException expected) {
             return 0;

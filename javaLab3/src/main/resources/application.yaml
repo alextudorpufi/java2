@@ -6,7 +6,7 @@ server:
   port: 8081
 
 library:
-  policy: fixed
+  policy: fixed # fixed, role-based, or drools
   fixed-limit: 3
   student-limit: 2
   regular-limit: 3

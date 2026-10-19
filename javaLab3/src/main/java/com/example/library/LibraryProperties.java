@@ -11,7 +11,7 @@ public record LibraryProperties(
         @DefaultValue("3") int regularLimit,
         @DefaultValue("5") int premiumLimit,
         @DefaultValue("2") int eventThreshold) {
-    public enum Policy { FIXED, ROLE_BASED }
+    public enum Policy { FIXED, ROLE_BASED, DROOLS }
 
     public LibraryProperties {
         if (fixedLimit < 1 || studentLimit < 1 || regularLimit < 1 || premiumLimit < 1) {

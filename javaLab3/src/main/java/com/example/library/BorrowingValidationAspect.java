@@ -23,24 +23,24 @@ public class BorrowingValidationAspect {
         this.policy = policy;
     }
 
-    @Around("execution(* com.example.library.BorrowingService.borrowBook(long, long)) || "
+    @Around("execution(* com.example.library.BorrowingService.borrowBook(com.example.library.BorrowingRequest)) || "
             + "execution(* com.example.library.BorrowingService.returnBook(long, long))")
     public Object validate(ProceedingJoinPoint call) throws Throwable {
-        long memberId = (long) call.getArgs()[0];
-        long bookId = (long) call.getArgs()[1];
+        boolean borrowing = call.getSignature().getName().equals("borrowBook");
+        BorrowingRequest request = borrowing ? (BorrowingRequest) call.getArgs()[0] : null;
+        long memberId = borrowing ? request.memberId() : (long) call.getArgs()[0];
+        long bookId = borrowing ? request.bookId() : (long) call.getArgs()[1];
         // Keep checks and changes atomic, including concurrent borrows and returns.
         synchronized (loans) {
             Member member = members.findById(memberId)
                     .orElseThrow(() -> new BorrowingException("Member not found: " + memberId));
-            books.findById(bookId)
+            Book book = books.findById(bookId)
                     .orElseThrow(() -> new BorrowingException("Book not found: " + bookId));
-            if (call.getSignature().getName().equals("borrowBook")) {
-                if (loans.findByBookId(bookId).isPresent()) {
-                    throw new BorrowingException("Book is already borrowed: " + bookId);
-                }
-                if (loans.countByMemberId(memberId) >= policy.limitFor(member)) {
-                    throw new BorrowingException("Borrowing limit reached for " + member.name());
-                }
+            if (borrowing) {
+                BorrowingContext context = new BorrowingContext(member, book,
+                        loans.countByMemberId(memberId), loans.findByBookId(bookId).isEmpty());
+                // Evaluate exactly once, then pass the approved period to the service.
+                request.approve(policy.evaluate(context));
             } else {
                 Loan loan = loans.findByBookId(bookId)
                         .orElseThrow(() -> new BorrowingException("Book is not borrowed: " + bookId));

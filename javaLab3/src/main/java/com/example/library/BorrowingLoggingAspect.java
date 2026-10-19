@@ -31,8 +31,8 @@ public class BorrowingLoggingAspect {
     @Around("borrowingOperation()")
     public Object logOperation(ProceedingJoinPoint call) throws Throwable {
         long start = System.nanoTime();
-        long memberId = (long) call.getArgs()[0];
-        long bookId = (long) call.getArgs()[1];
+        long memberId = memberId(call);
+        long bookId = bookId(call);
         try {
             return call.proceed();
         } finally {
@@ -47,6 +47,16 @@ public class BorrowingLoggingAspect {
     @AfterThrowing(pointcut = "borrowingOperation()", throwing = "error")
     public void logFailure(JoinPoint call, Exception error) {
         log.error("Failed operation={}, memberId={}, bookId={}, error={}",
-                call.getSignature().getName(), call.getArgs()[0], call.getArgs()[1], error.getMessage());
+                call.getSignature().getName(), memberId(call), bookId(call), error.getMessage());
+    }
+
+    private long memberId(JoinPoint call) {
+        return call.getArgs()[0] instanceof BorrowingRequest request
+                ? request.memberId() : (long) call.getArgs()[0];
+    }
+
+    private long bookId(JoinPoint call) {
+        return call.getArgs()[0] instanceof BorrowingRequest request
+                ? request.bookId() : (long) call.getArgs()[1];
     }
 }

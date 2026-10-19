@@ -1,0 +1,53 @@
+package com.example.library.rules
+
+import com.example.library.BorrowingContext;
+import com.example.library.BorrowingDecision;
+import com.example.library.Member.Role;
+import com.example.library.Book.Type;
+
+// Java provides this list; a matching rule adds its decision to it.
+global java.util.List decisions;
+
+rule "Reject unavailable book"
+when
+    BorrowingContext(available() == false)
+then
+    decisions.add(BorrowingDecision.reject("Book is already borrowed"));
+end
+
+rule "Reject reference book"
+when
+    BorrowingContext(available() == true, book().type() == Type.REFERENCE)
+then
+    decisions.add(BorrowingDecision.reject("Reference books cannot be borrowed"));
+end
+
+rule "Allow student"
+when
+    $context : BorrowingContext(
+        available() == true, book().type() != Type.REFERENCE,
+        member().role() == Role.STUDENT, borrowedCount() < 2)
+then
+    int days = $context.book().type() == Type.TEXTBOOK ? 7 : 14;
+    decisions.add(BorrowingDecision.allow(days));
+end
+
+rule "Allow regular member"
+when
+    $context : BorrowingContext(
+        available() == true, book().type() != Type.REFERENCE,
+        member().role() == Role.REGULAR, borrowedCount() < 3)
+then
+    int days = $context.book().type() == Type.TEXTBOOK ? 7 : 21;
+    decisions.add(BorrowingDecision.allow(days));
+end
+
+rule "Allow premium member"
+when
+    $context : BorrowingContext(
+        available() == true, book().type() != Type.REFERENCE,
+        member().role() == Role.PREMIUM, borrowedCount() < 5)
+then
+    int days = $context.book().type() == Type.TEXTBOOK ? 7 : 28;
+    decisions.add(BorrowingDecision.allow(days));
+end

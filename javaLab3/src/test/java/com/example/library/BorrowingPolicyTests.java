@@ -20,7 +20,7 @@ class BorrowingPolicyTests {
             assertThat(ctx).hasSingleBean(BorrowingPolicy.class);
             assertThat(ctx.getBean(BorrowingPolicy.class)).isInstanceOf(FixedBorrowingPolicy.class);
             for (Member.Role role : Member.Role.values()) {
-                assertThat(ctx.getBean(BorrowingPolicy.class).limitFor(new Member(1, "Ana", role))).isEqualTo(3);
+                assertLimit(ctx.getBean(BorrowingPolicy.class), role, 3);
             }
         });
     }
@@ -32,17 +32,16 @@ class BorrowingPolicyTests {
             assertThat(ctx).hasSingleBean(BorrowingPolicy.class);
             var policy = ctx.getBean(BorrowingPolicy.class);
             assertThat(policy).isInstanceOf(RoleBasedBorrowingPolicy.class);
-            assertThat(policy.limitFor(new Member(1, "Ana", Member.Role.STUDENT))).isEqualTo(1);
-            assertThat(policy.limitFor(new Member(2, "Dan", Member.Role.REGULAR))).isEqualTo(4);
-            assertThat(policy.limitFor(new Member(3, "Mia", Member.Role.PREMIUM))).isEqualTo(7);
+            assertLimit(policy, Member.Role.STUDENT, 1);
+            assertLimit(policy, Member.Role.REGULAR, 4);
+            assertLimit(policy, Member.Role.PREMIUM, 7);
         });
     }
 
     @Test
     void fixedLimitCanBeConfigured() {
         context.withPropertyValues("library.fixed-limit=8").run(ctx ->
-                assertThat(ctx.getBean(BorrowingPolicy.class).limitFor(
-                        new Member(1, "Ana", Member.Role.REGULAR))).isEqualTo(8));
+                assertLimit(ctx.getBean(BorrowingPolicy.class), Member.Role.REGULAR, 8));
     }
 
     @Test
@@ -51,5 +50,13 @@ class BorrowingPolicyTests {
                 "library.student-limit=-1", "library.event-threshold=-1"}) {
             context.withPropertyValues(property).run(ctx -> assertThat(ctx).hasFailed());
         }
+    }
+
+    private void assertLimit(BorrowingPolicy policy, Member.Role role, int limit) {
+        Member member = new Member(1, "Ana", role);
+        Book book = new Book(1, "Java");
+        assertThat(policy.evaluate(new BorrowingContext(member, book, limit - 1, true)).allowed()).isTrue();
+        assertThat(policy.evaluate(new BorrowingContext(member, book, limit, true)).allowed()).isFalse();
+        assertThat(policy.evaluate(new BorrowingContext(member, book, 0, false)).allowed()).isFalse();
     }
 }
