@@ -39,6 +39,28 @@ class DemoApplicationTests {
     }
 
     @Test
+    void customerUpdatePreservesDeliveries() {
+        Customer customer = newCustomer();
+        Delivery delivery = deliveries.save(new Delivery(customer, BigDecimal.ONE, "Keep me"));
+        customers.update(customer.getId(), new Customer("Updated", "updated@example.com", "0711111111",
+                "New address", BigDecimal.ONE, BigDecimal.TEN));
+        entityManager.clear();
+        Customer reloaded = customers.findById(customer.getId());
+        assertEquals("Updated", reloaded.getName());
+        assertEquals("updated@example.com", reloaded.getEmail());
+        assertEquals(delivery.getId(), reloaded.getDeliveries().getFirst().getId());
+    }
+
+    @Test
+    void customerWithDeliveriesCannotBeDeleted() {
+        Customer customer = newCustomer();
+        deliveries.save(new Delivery(customer, BigDecimal.ONE, "Keep me"));
+        entityManager.flush();
+        entityManager.clear();
+        assertThrows(DataIntegrityViolationException.class, () -> customers.delete(customer.getId()));
+    }
+
+    @Test
     void associationsSurviveReload() {
         Depot depot = newDepot();
         Customer customer = newCustomer();

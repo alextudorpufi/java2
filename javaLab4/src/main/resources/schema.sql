@@ -1,4 +1,5 @@
--- PostgreSQL: run once against your lab database using pgAdmin's Query Tool.
+-- Historical manual schema reference. New installations use Flyway db/migration instead.
+-- Do not run this against a Flyway-managed database; see REST-ADVANCED.md for adoption.
 -- Coordinates are stored as latitude and longitude in decimal degrees.
 -- Capacity and delivery quantity must use the same unit (for example, kg).
 BEGIN;
@@ -49,6 +50,26 @@ CREATE TABLE deliveries (
     CONSTRAINT fk_delivery_customer FOREIGN KEY (customer_id)
         REFERENCES customers(id) ON DELETE RESTRICT
 );
+
+CREATE TABLE scenarios (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100) NOT NULL CHECK (btrim(name) <> '')
+);
+
+CREATE TABLE scenario_vehicles (
+    scenario_id BIGINT NOT NULL REFERENCES scenarios(id) ON DELETE CASCADE,
+    vehicle_id BIGINT NOT NULL REFERENCES vehicles(id) ON DELETE RESTRICT,
+    PRIMARY KEY (scenario_id, vehicle_id)
+);
+
+CREATE TABLE scenario_deliveries (
+    scenario_id BIGINT NOT NULL REFERENCES scenarios(id) ON DELETE CASCADE,
+    delivery_id BIGINT NOT NULL REFERENCES deliveries(id) ON DELETE RESTRICT,
+    PRIMARY KEY (scenario_id, delivery_id)
+);
+
+CREATE INDEX idx_scenario_vehicles_vehicle_id ON scenario_vehicles(vehicle_id);
+CREATE INDEX idx_scenario_deliveries_delivery_id ON scenario_deliveries(delivery_id);
 
 -- PostgreSQL does not automatically index referencing foreign-key columns.
 -- driver_id already has an index supplied by its UNIQUE constraint.

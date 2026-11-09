@@ -8,6 +8,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
+    List<Delivery> findByCustomerIdOrderByIdAsc(Long customerId);
+
     // JPQL refers to Java entities/properties, not SQL tables/columns.
     // The interval includes from but excludes to, so adjacent periods do not overlap.
     @Query("""

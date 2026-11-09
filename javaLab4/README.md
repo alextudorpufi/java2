@@ -1,13 +1,17 @@
 # Vehicle Routing Optimization System — Lab 4
 
+The REST homework extension is documented in [HOMEWORK.md](HOMEWORK.md), including scenario relationships, all CRUD resources, ETags, JSON/XML, and Swagger UI verification.
+
+See [REST-ADVANCED.md](REST-ADVANCED.md) for Flyway migrations, customer HATEOAS links, `/api/v1` routes, and the API migration strategy.
+
 ## Run locally
 
-1. Create a PostgreSQL database and run `src/main/resources/schema.sql` once in pgAdmin's Query Tool.
+1. Create an empty PostgreSQL database. Flyway creates the schema automatically. If you already created the lab tables manually, first follow the one-time baseline instructions in [REST-ADVANCED.md](REST-ADVANCED.md#adopt-an-existing-manually-created-database).
 2. Set `DB_URL` (for example `jdbc:postgresql://localhost:5432/javaLab4`), `DB_USERNAME`, and `DB_PASSWORD` in the application run configuration's **Environment variables** field. Use your actual port and database name. Do not commit passwords.
 3. Run `DemoApplication` in IntelliJ, or run `./mvnw spring-boot:run` in a shell with those variables set. Java 21 or newer is required.
 4. Look for `Customer repository test passed` in the log. The runner creates a demo customer on its first run and reuses it on later runs.
 
-Hibernate uses `ddl-auto: validate` for the application: the SQL script creates the schema, and Hibernate checks the entity mappings. Do not rerun the creation script against existing tables. The homework mappings require no changes to the compulsory schema.
+Flyway executes the versioned SQL in `src/main/resources/db/migration` before Hibernate validates the entity mappings. Do not run the historical `schema.sql` or `schema-scenarios.sql` scripts manually. Existing untracked schemas need an explicit baseline at version 1 (core tables only) or 2 (complete homework schema); the detailed adoption steps preserve existing data.
 
 ## 1. Entities and associations
 
@@ -55,15 +59,53 @@ Every service provides `save`, `findById`, and `findAll`. Reads use `@Transactio
 
 `DeliveryService` validates the date interval before calling the JPQL query. `CustomerDemoRunner` now uses `CustomerService`, demonstrating the flow runner → service → repository → database.
 
-Collections are lazy. Access them inside a transaction (as the integration tests do); future API operations should assemble response data inside service transactions rather than directly serialize bidirectional entities.
+Collections are lazy. Access them inside a transaction (as the integration tests do). The customer API returns scalar response DTOs and does not serialize delivery associations.
+
+## Customer REST API
+
+| Method | URL | Success |
+| --- | --- | --- |
+| POST | `/api/customers` | `201 Created`, JSON customer and `Location` header |
+| GET | `/api/customers` | `200 OK`, JSON array |
+| GET | `/api/customers/{id}` | `200 OK`, JSON customer |
+| PUT | `/api/customers/{id}` | `200 OK`, replaced customer fields |
+| DELETE | `/api/customers/{id}` | `204 No Content` |
+
+POST and PUT require all six contact/location fields: `name`, `email`, `phone`, `address`, `latitude`, and `longitude`. The server generates IDs. Name, email, phone, and address must be nonblank and fit the database column lengths; email must have valid syntax. Latitude must be between -90 and 90, longitude between -180 and 180, with at most six decimal places. Invalid input returns `400`, missing customers return `404`, and duplicate emails or deleting a customer with deliveries return `409`. PUT updates an existing customer; it does not create one. Deliveries are preserved when updating a customer.
+
+With the application running, create a customer using curl:
+
+```sh
+curl -i -X POST http://localhost:8080/api/customers \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Ana Popescu","email":"ana@example.com","phone":"+40712345678","address":"Bucharest","latitude":44.4268,"longitude":26.1025}'
+```
+
+Run the repeatable curl checks (requires Python 3 and curl):
+
+```sh
+python3 scripts/test-customers.py
+# Optional custom server URL:
+python3 scripts/test-customers.py http://localhost:8081
+```
+
+The script checks create, list, read, update, delete, duplicate email, invalid inputs, and missing IDs, and deletes its temporary customer afterward.
+
+For a disposable local server without PostgreSQL credentials, use the existing test profile and H2 test dependency:
+
+```sh
+./mvnw spring-boot:test-run -Dspring-boot.run.profiles=test
+```
+
+This server uses an in-memory database that is discarded on shutdown. The normal run command continues to use PostgreSQL.
 
 ## Verification
 
-Run `./mvnw test`. The `test` profile uses a disposable H2 database in PostgreSQL compatibility mode, with Hibernate creating and dropping the test schema. No local database credentials are required, and these tests do not touch your PostgreSQL database.
+Run `./mvnw test`. The `test` profile uses a disposable H2 database in PostgreSQL compatibility mode. Flyway creates the schema and Hibernate validates it. No local database credentials are required; the optional PostgreSQL migration test runs only when its explicit test database variables are set.
 
 The integration tests check persistence/reloading of relationships, both sides of the driver assignment, rejection of assignment conflicts, moving a driver after unassignment, database enforcement of driver uniqueness, the derived query, JPQL interval boundaries and customer filtering, and the modifying query's persistence-context clearing.
 
-H2 is only a test dependency. These tests verify JPA behavior, but do not execute the PostgreSQL SQL script or verify its PostgreSQL-specific checks. Start the application against your local PostgreSQL database to validate the real schema too.
+H2 is only a test dependency. Tests execute the same Flyway migration files used by PostgreSQL. An optional PostgreSQL migration test verifies fresh installation and legacy adoption against the real database engine; see [REST-ADVANCED.md](REST-ADVANCED.md#verification).
 
 ## Advanced section
 

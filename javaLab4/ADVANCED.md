@@ -6,7 +6,7 @@
 
 Default population adds **5 depots, 20 drivers, 20 vehicles, 1,000 customers, and 10,000 deliveries**. JDBC inserts retrieve generated IDs; delivery inserts use batches of 500. This avoids keeping thousands of JPA entities in memory and the insert-batching limitation of IDENTITY generation. The operation is transactional: failure rolls back the dataset. The random seed is fixed at 42 by default; UUIDs and generated database IDs intentionally differ between runs.
 
-After running `schema.sql` and setting your database environment variables, in IntelliJ:
+After setting your database environment variables and letting Flyway migrate (or explicitly baselining an existing schema as described in [REST-ADVANCED.md](REST-ADVANCED.md)), in IntelliJ:
 
 1. Open the `DemoApplication` run configuration.
 2. Set **Active profiles** to `seed`. Keep the database credentials in **Environment variables**.
