@@ -15,6 +15,16 @@ public abstract class Person {
     private Long id;
 
     @Setter
+    @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private AppUser user;
+
+    @PrePersist
+    protected void ensureUserAccount() {
+        if (user == null) user = AppUser.disabled(this instanceof Customer ? Role.CUSTOMER : Role.DRIVER);
+    }
+
+    @Setter
     @Column(nullable = false, length = 100)
     private String name;
 

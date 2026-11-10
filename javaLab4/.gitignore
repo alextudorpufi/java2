@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Python smoke scripts
+__pycache__/

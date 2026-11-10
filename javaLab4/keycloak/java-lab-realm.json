@@ -1,0 +1,126 @@
+{
+  "realm": "java-lab",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN"
+      },
+      {
+        "name": "CUSTOMER"
+      },
+      {
+        "name": "DRIVER"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "routing-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true
+    },
+    {
+      "clientId": "routing-api-docs",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/swagger-ui/oauth2-redirect.html"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "web-origins",
+        "roles",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "routing-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "routing-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "prof-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "prof-admin@example.com",
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "realmRoles": [
+        "ADMIN"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "keycloak-demo-password-123",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "prof-customer",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "prof-customer@example.com",
+      "firstName": "Demo",
+      "lastName": "Customer",
+      "realmRoles": [
+        "CUSTOMER"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "keycloak-demo-password-123",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "prof-driver",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "prof-driver@example.com",
+      "firstName": "Demo",
+      "lastName": "Driver",
+      "realmRoles": [
+        "DRIVER"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "keycloak-demo-password-123",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

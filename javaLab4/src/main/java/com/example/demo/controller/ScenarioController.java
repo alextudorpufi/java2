@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(value = {"/api/v1/scenarios", "/api/scenarios"}, produces = {"application/json", "application/xml"})
@@ -26,6 +27,7 @@ public class ScenarioController {
     private final ScenarioService service;
 
     @ApiResponse(responseCode = "201", description = "Created")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(consumes = {"application/json", "application/xml"})
     public ResponseEntity<ScenarioResponse> create(@Valid @RequestBody ScenarioRequest request) {
         var created = service.create(request);
@@ -60,12 +62,14 @@ public class ScenarioController {
         return service.response(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{id}", consumes = {"application/json", "application/xml"})
     public ScenarioResponse update(@PathVariable Long id, @Valid @RequestBody ScenarioRequest request) {
         return service.update(id, request);
     }
 
     @ApiResponse(responseCode = "204", description = "Deleted; no response body")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);

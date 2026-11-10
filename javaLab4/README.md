@@ -1,5 +1,15 @@
 # Vehicle Routing Optimization System — Lab 4
 
+The access/refresh-token and Keycloak OIDC extension is documented in
+[SECURITY-ADVANCED.md](SECURITY-ADVANCED.md), including a ready-to-run Keycloak realm
+and Swagger Authorization Code with PKCE demonstration.
+
+The JWT security homework is documented in [SECURITY.md](SECURITY.md): database users
+and roles, BCrypt registration, Bearer-token login, role-based writes, method
+security, and `dev`/`prod` profiles. Production is the default and requires
+`JWT_SECRET`. Follow that guide before using older curl examples below; the smoke
+scripts support `API_USERNAME` / `API_PASSWORD` or `API_DEV_MODE=true`.
+
 The REST homework extension is documented in [HOMEWORK.md](HOMEWORK.md), including scenario relationships, all CRUD resources, ETags, JSON/XML, and Swagger UI verification.
 
 See [REST-ADVANCED.md](REST-ADVANCED.md) for Flyway migrations, customer HATEOAS links, `/api/v1` routes, and the API migration strategy.
@@ -9,7 +19,7 @@ See [REST-ADVANCED.md](REST-ADVANCED.md) for Flyway migrations, customer HATEOAS
 1. Create an empty PostgreSQL database. Flyway creates the schema automatically. If you already created the lab tables manually, first follow the one-time baseline instructions in [REST-ADVANCED.md](REST-ADVANCED.md#adopt-an-existing-manually-created-database).
 2. Set `DB_URL` (for example `jdbc:postgresql://localhost:5432/javaLab4`), `DB_USERNAME`, and `DB_PASSWORD` in the application run configuration's **Environment variables** field. Use your actual port and database name. Do not commit passwords.
 3. Run `DemoApplication` in IntelliJ, or run `./mvnw spring-boot:run` in a shell with those variables set. Java 21 or newer is required.
-4. Look for `Customer repository test passed` in the log. The runner creates a demo customer on its first run and reuses it on later runs.
+4. Look for `Started DemoApplication` in the log. The `dev` and `test` profiles also create a demo customer and log `Customer repository test passed`.
 
 Flyway executes the versioned SQL in `src/main/resources/db/migration` before Hibernate validates the entity mappings. Do not run the historical `schema.sql` or `schema-scenarios.sql` scripts manually. Existing untracked schemas need an explicit baseline at version 1 (core tables only) or 2 (complete homework schema); the detailed adoption steps preserve existing data.
 

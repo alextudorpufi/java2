@@ -4,6 +4,7 @@ import com.example.demo.entity.Delivery;
 import com.example.demo.repository.DeliveryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -45,6 +46,7 @@ public class DeliveryService {
 
     @Transactional
     @CacheEvict(value = "deliverySearches", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public DeliveryResponse create(DeliveryRequest request) {
         Delivery delivery = new Delivery();
         apply(delivery, request);
@@ -53,6 +55,7 @@ public class DeliveryService {
 
     @Transactional
     @CacheEvict(value = "deliverySearches", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public DeliveryResponse update(Long id, DeliveryRequest request) {
         Delivery delivery = findById(id);
         apply(delivery, request);
@@ -70,6 +73,7 @@ public class DeliveryService {
 
     @Transactional
     @CacheEvict(value = "deliverySearches", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         repository.delete(findById(id));
         repository.flush();

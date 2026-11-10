@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 import java.math.BigDecimal;
 
 @Component
-@Profile("!seed & !benchmark")
+@Profile("(dev | test) & !seed & !benchmark")
 public class CustomerDemoRunner implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerDemoRunner.class);

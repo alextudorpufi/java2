@@ -4,6 +4,7 @@ import com.example.demo.entity.Vehicle;
 import com.example.demo.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import com.example.demo.repository.DriverRepository;
@@ -44,6 +45,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public VehicleResponse create(VehicleRequest request) {
         Vehicle vehicle = new Vehicle();
         apply(vehicle, request);
@@ -51,6 +53,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public VehicleResponse update(Long id, VehicleRequest request) {
         Vehicle vehicle = findById(id);
         if (vehicle.getDriver() != null) {
@@ -70,6 +73,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         repository.delete(findById(id));
         repository.flush();

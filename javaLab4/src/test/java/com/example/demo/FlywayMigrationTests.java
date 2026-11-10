@@ -35,8 +35,8 @@ class FlywayMigrationTests {
     void freshSchemaMigratesAndSubsequentStartupDoesNotRepeatChanges() {
         var source = database();
         Flyway flyway = Flyway.configure().dataSource(source).load();
-        assertEquals(2, flyway.migrate().migrationsExecuted);
-        assertEquals("2", flyway.info().current().getVersion().toString());
+        assertEquals(4, flyway.migrate().migrationsExecuted);
+        assertEquals("4", flyway.info().current().getVersion().toString());
         assertEquals(0, flyway.migrate().migrationsExecuted);
         assertTrue(flyway.validateWithResult().validationSuccessful);
         var jdbc = new JdbcTemplate(source);
@@ -51,10 +51,15 @@ class FlywayMigrationTests {
         legacyCore(source);
         Flyway flyway = Flyway.configure().dataSource(source)
                 .baselineOnMigrate(true).baselineVersion("1").load();
-        assertEquals(1, flyway.migrate().migrationsExecuted);
+        assertEquals(3, flyway.migrate().migrationsExecuted);
         assertEquals("existing@example.com", new JdbcTemplate(source)
                 .queryForObject("select email from customers", String.class));
-        assertEquals("2", flyway.info().current().getVersion().toString());
+        assertEquals("4", flyway.info().current().getVersion().toString());
+        var jdbc = new JdbcTemplate(source);
+        assertEquals("CUSTOMER", jdbc.queryForObject("select role from user_roles", String.class));
+        assertFalse(jdbc.queryForObject("select enabled from app_users", Boolean.class));
+        assertEquals("!", jdbc.queryForObject("select password_hash from app_users", String.class));
+        assertNotNull(jdbc.queryForObject("select user_id from customers", Long.class));
         assertEquals(0, flyway.migrate().migrationsExecuted);
     }
 
@@ -68,7 +73,7 @@ class FlywayMigrationTests {
         jdbc.update("insert into scenarios(name) values ('Existing scenario')");
         Flyway flyway = Flyway.configure().dataSource(source)
                 .baselineOnMigrate(true).baselineVersion("2").load();
-        assertEquals(0, flyway.migrate().migrationsExecuted);
+        assertEquals(2, flyway.migrate().migrationsExecuted);
         assertEquals("Existing scenario", jdbc.queryForObject("select name from scenarios", String.class));
         assertEquals(1L, jdbc.queryForObject("select count(*) from customers", Long.class));
     }
@@ -85,7 +90,7 @@ class FlywayMigrationTests {
     void changingAnAppliedMigrationFailsValidation(@TempDir Path directory) throws Exception {
         var source = database();
         Flyway.configure().dataSource(source).load().migrate();
-        for (String file : new String[]{"V1__create_routing_schema.sql", "V2__add_scenarios.sql"}) {
+        for (String file : new String[]{"V1__create_routing_schema.sql", "V2__add_scenarios.sql", "V3__add_user_accounts.sql", "V4__add_refresh_sessions.sql"}) {
             String sql;
             try (var input = new ClassPathResource("db/migration/" + file).getInputStream()) {
                 sql = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
@@ -110,7 +115,7 @@ class FlywayMigrationTests {
         jdbc.execute("create schema " + legacy);
         try {
             Flyway flyway = Flyway.configure().dataSource(source).schemas(fresh).defaultSchema(fresh).load();
-            assertEquals(2, flyway.migrate().migrationsExecuted);
+            assertEquals(4, flyway.migrate().migrationsExecuted);
             assertEquals(0, flyway.migrate().migrationsExecuted);
             assertTrue(flyway.validateWithResult().validationSuccessful);
             Flyway.configure().dataSource(source).schemas(legacy).defaultSchema(legacy).target("1").load().migrate();
@@ -119,7 +124,7 @@ class FlywayMigrationTests {
                     + "values ('Existing','pg-existing@example.com','0700000000','Address',44,26)");
             Flyway adopted = Flyway.configure().dataSource(source).schemas(legacy).defaultSchema(legacy)
                     .baselineOnMigrate(true).baselineVersion("1").load();
-            assertEquals(1, adopted.migrate().migrationsExecuted);
+            assertEquals(3, adopted.migrate().migrationsExecuted);
             assertEquals("pg-existing@example.com", jdbc.queryForObject(
                     "select email from " + legacy + ".customers", String.class));
             assertEquals(0L, jdbc.queryForObject("select count(*) from " + legacy + ".scenarios", Long.class));

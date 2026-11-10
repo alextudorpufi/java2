@@ -1,0 +1,12 @@
+# Enable alongside prod (or test for H2). Keycloak owns users, credentials and refresh tokens.
+app:
+  oidc:
+    issuer: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/java-lab}
+    jwk-set-uri: ${app.oidc.issuer}/protocol/openid-connect/certs
+    audience: routing-api
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: routing-api-docs
+      use-pkce-with-authorization-code-grant: true
+      scopes: openid,profile,email

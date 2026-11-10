@@ -4,16 +4,19 @@ import json
 import subprocess
 import sys
 import uuid
+from security_client import security_options
 
 
 base = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080").rstrip("/")
 api_prefix = (sys.argv[2] if len(sys.argv) > 2 else "/api/v1").rstrip("/")
 endpoint = base + api_prefix + "/customers"
+security = security_options(base)
 
 
 def request(method, url, expected, body=None):
     command = ["curl", "--silent", "--show-error", "--max-time", "15",
                "--request", method, "--write-out", "\n%{http_code}", url]
+    command += security
     if body is not None:
         command += ["--header", "Content-Type: application/json", "--data", json.dumps(body)]
     output = subprocess.check_output(command, text=True)

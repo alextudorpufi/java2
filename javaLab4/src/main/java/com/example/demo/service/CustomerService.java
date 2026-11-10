@@ -7,6 +7,7 @@ import com.example.demo.repository.DeliveryRepository;
 import com.example.demo.dto.DeliveryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -45,6 +46,7 @@ public class CustomerService {
 
     @Transactional
     @CacheEvict(value = "deliverySearches", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public Customer update(Long id, Customer changes) {
         Customer customer = findById(id);
         customer.setName(changes.getName());
@@ -58,6 +60,7 @@ public class CustomerService {
 
     @Transactional
     @CacheEvict(value = "deliverySearches", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         repository.delete(findById(id));
         repository.flush();

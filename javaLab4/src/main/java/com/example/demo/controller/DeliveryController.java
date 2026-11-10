@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(value = {"/api/v1/deliveries", "/api/deliveries"}, produces = {"application/json", "application/xml"})
@@ -18,6 +19,7 @@ public class DeliveryController {
     private final DeliveryService service;
 
     @ApiResponse(responseCode = "201", description = "Created")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(consumes = {"application/json", "application/xml"})
     public ResponseEntity<DeliveryResponse> create(@Valid @RequestBody DeliveryRequest request) {
         var created = service.create(request);
@@ -36,12 +38,14 @@ public class DeliveryController {
         return service.response(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{id}", consumes = {"application/json", "application/xml"})
     public DeliveryResponse update(@PathVariable Long id, @Valid @RequestBody DeliveryRequest request) {
         return service.update(id, request);
     }
 
     @ApiResponse(responseCode = "204", description = "Deleted; no response body")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);

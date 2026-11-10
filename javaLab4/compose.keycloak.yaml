@@ -1,0 +1,13 @@
+# Local demonstration only; binds to loopback and imports the supplied demo realm.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.2
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: keycloak-admin-demo-123
+      KC_HOSTNAME: http://localhost:8180
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      - ./keycloak/java-lab-realm.json:/opt/keycloak/data/import/java-lab-realm.json:ro

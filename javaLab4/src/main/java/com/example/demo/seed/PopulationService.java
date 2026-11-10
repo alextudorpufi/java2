@@ -36,17 +36,17 @@ public class PopulationService {
                     "Depot " + faker.address().city(), latitude(random), longitude(random)));
         }
         for (int i = 0; i < 20; i++) {
-            long driver = insert("insert into drivers(name, email, phone) values (?, ?, ?)",
-                    faker.name().fullName(), "driver." + run + "." + i + "@example.com", phone(random));
+            long driver = insert("insert into drivers(name, email, phone, user_id) values (?, ?, ?, ?)",
+                    faker.name().fullName(), "driver." + run + "." + i + "@example.com", phone(random), account("DRIVER"));
             insert("insert into vehicles(name, capacity, depot_id, available, driver_id) values (?, ?, ?, ?, ?)",
                     "Van " + (i + 1), BigDecimal.valueOf(1000 + random.nextInt(4000)),
                     depots.get(i % depots.size()), true, driver);
         }
         List<Long> customers = new ArrayList<>(customerCount);
         for (int i = 0; i < customerCount; i++) {
-            customers.add(insert("insert into customers(name, email, phone, address, latitude, longitude) values (?, ?, ?, ?, ?, ?)",
+            customers.add(insert("insert into customers(name, email, phone, address, latitude, longitude, user_id) values (?, ?, ?, ?, ?, ?, ?)",
                     faker.name().fullName(), "customer." + run + "." + i + "@example.com", phone(random),
-                    faker.address().fullAddress(), latitude(random), longitude(random)));
+                    faker.address().fullAddress(), latitude(random), longitude(random), account("CUSTOMER")));
         }
         // Bound memory use and JDBC batches; IDENTITY entities otherwise inhibit ORM insert batching.
         OffsetDateTime start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
@@ -61,6 +61,13 @@ public class PopulationService {
             }
         }
         return new PopulationResult(5, 20, 20, customerCount, deliveryCount);
+    }
+
+    private long account(String role) {
+        long id = insert("insert into app_users(username, password_hash, enabled) values (?, ?, ?)",
+                "seed-" + UUID.randomUUID(), "!", false);
+        jdbc.update("insert into user_roles(user_id, role) values (?, ?)", id, role);
+        return id;
     }
 
     private long insert(String sql, Object... values) {

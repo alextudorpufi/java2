@@ -1,0 +1,5 @@
+# Local development only. Both HTTP and method authorization are bypassed.
+# An ephemeral signing key is generated in dev if JWT_SECRET is absent.
+app:
+  jwt:
+    secret: ${JWT_SECRET:}

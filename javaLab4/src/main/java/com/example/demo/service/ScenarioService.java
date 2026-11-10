@@ -7,6 +7,7 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
@@ -36,6 +37,7 @@ public class ScenarioService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public ScenarioResponse create(ScenarioRequest request) {
         Scenario scenario = new Scenario();
         apply(scenario, request);
@@ -43,6 +45,7 @@ public class ScenarioService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public ScenarioResponse update(Long id, ScenarioRequest request) {
         Scenario scenario = findById(id);
         apply(scenario, request);
@@ -68,6 +71,7 @@ public class ScenarioService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         // Hibernate removes the owning join rows, while shared entities remain intact.
         repository.delete(findById(id));

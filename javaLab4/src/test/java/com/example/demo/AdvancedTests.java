@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener=OFF"
 })
 @ActiveProfiles("test")
+@WithMockUser(roles = "ADMIN")
 class AdvancedTests {
     @Autowired CustomerService customers;
     @Autowired DeliveryService deliveries;

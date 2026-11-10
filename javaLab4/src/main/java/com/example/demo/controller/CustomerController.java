@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping(value = {"/api/v1/customers", "/api/customers"}, produces = {"application/json", "application/xml"})
@@ -21,6 +22,7 @@ public class CustomerController {
     private final CustomerService customers;
 
     @ApiResponse(responseCode = "201", description = "Created")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
         CustomerResponse created = toResponse(customers.save(request.toEntity()));
@@ -39,6 +41,7 @@ public class CustomerController {
         return toResponse(customers.findById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public CustomerResponse update(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
         return toResponse(customers.update(id, request.toEntity()));
@@ -58,6 +61,7 @@ public class CustomerController {
     }
 
     @ApiResponse(responseCode = "204", description = "Deleted; no response body")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         customers.delete(id);

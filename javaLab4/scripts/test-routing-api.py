@@ -7,12 +7,14 @@ import sys
 import tempfile
 import uuid
 import xml.etree.ElementTree as ET
+from security_client import security_options
 
 base = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080").rstrip("/")
 depot_id = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 api_prefix = (sys.argv[3] if len(sys.argv) > 3 else "/api/v1").rstrip("/")
 created = []
 checks = 0
+security = security_options(base)
 
 
 def request(method, path, expected, payload=None, headers=None):
@@ -21,6 +23,7 @@ def request(method, path, expected, payload=None, headers=None):
         header_file = Path(directory) / "headers"
         command = ["curl", "--silent", "--show-error", "--max-time", "15", "--request", method,
                    "--dump-header", str(header_file), "--write-out", "\n%{http_code}", base + path]
+        command += security
         for key, value in (headers or {"Accept": "application/json"}).items():
             command += ["--header", f"{key}: {value}"]
         if payload is not None:

@@ -35,8 +35,34 @@ public class ApiConfiguration {
     }
 
     @Bean
-    public OpenAPI routingOpenApi() {
-        return new OpenAPI().info(new Info().title("Vehicle Routing API").version("1.0")
+    public OpenAPI routingOpenApi(org.springframework.core.env.Environment environment,
+            @org.springframework.beans.factory.annotation.Value("${app.oidc.issuer:}") String issuer) {
+        var api = new OpenAPI();
+        if (environment.acceptsProfiles(org.springframework.core.env.Profiles.of("keycloak"))) {
+            api.components(new io.swagger.v3.oas.models.Components().addSecuritySchemes("keycloak",
+                    new io.swagger.v3.oas.models.security.SecurityScheme()
+                            .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.OAUTH2)
+                            .description("Keycloak OIDC Authorization Code with PKCE")
+                            .flows(new io.swagger.v3.oas.models.security.OAuthFlows().authorizationCode(
+                                    new io.swagger.v3.oas.models.security.OAuthFlow()
+                                            .authorizationUrl(issuer + "/protocol/openid-connect/auth")
+                                            .tokenUrl(issuer + "/protocol/openid-connect/token")
+                                            .refreshUrl(issuer + "/protocol/openid-connect/token")
+                                            .scopes(new io.swagger.v3.oas.models.security.Scopes()
+                                                    .addString("openid", "OpenID Connect login")
+                                                    .addString("profile", "Basic profile")
+                                                    .addString("email", "Email address"))))))
+                    .addSecurityItem(new io.swagger.v3.oas.models.security.SecurityRequirement()
+                            .addList("keycloak", java.util.List.of("openid", "profile", "email")));
+        } else {
+            api.components(new io.swagger.v3.oas.models.Components().addSecuritySchemes("bearerAuth",
+                    new io.swagger.v3.oas.models.security.SecurityScheme()
+                            .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+                            .scheme("bearer").bearerFormat("JWT")))
+                    .addSecurityItem(new io.swagger.v3.oas.models.security.SecurityRequirement().addList("bearerAuth"));
+        }
+        return api
+                .info(new Info().title("Vehicle Routing API").version("1.0")
                 .description("CRUD for customers, vehicles, deliveries and scenarios. "
                         + "GET supports ETag / If-None-Match and JSON/XML via Accept. "
                         + "Canonical routes use /api/v1; unversioned routes remain compatibility aliases. "
