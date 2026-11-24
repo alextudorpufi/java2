@@ -1,4 +1,9 @@
 spring:
+  kafka:
+    listener:
+      auto-startup: false
+    admin:
+      auto-create: false
   datasource:
     url: jdbc:h2:mem:lab4;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
     username: sa
@@ -13,5 +18,7 @@ spring:
       mode: never
 
 app:
+  optimization:
+    dispatch-enabled: false
   jwt:
     secret: dGVzdC1vbmx5LXNpZ25pbmcta2V5LWZvci1hdXRvbWF0ZWQtdGVzdHM=

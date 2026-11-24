@@ -120,3 +120,15 @@ H2 is only a test dependency. Tests execute the same Flyway migration files used
 ## Advanced section
 
 See [ADVANCED.md](ADVANCED.md) for DataFaker population, Criteria API search, Spring caching, and the JMH benchmark, including step-by-step run commands.
+
+## Asynchronous scenario optimization
+
+The compulsory Kafka integration uses the separate [OptimizationWorker project](../OptimizationWorker/README.md).
+Submit `POST /api/v1/scenarios/{id}/optimize` as an administrator; the API returns
+`202 Accepted` with a job UUID and a polling Location at `/api/v1/optimizations/{requestId}`.
+Poll that URL for status, then append `/solution` to retrieve a completed result.
+The worker publishes a COMPLETED or FAILED acknowledgment with its routes. The API
+consumes it and records the result. Both consumers route exhausted records to dead-letter topics.
+See the worker README for the component flow, Docker broker setup, demo commands,
+solver assumptions, retry behavior, and implementation decisions. Flyway V5 adds
+the durable jobs/outbox table.

@@ -23,7 +23,7 @@ public class LoginController {
 
     @io.swagger.v3.oas.annotations.security.SecurityRequirements
     @PostMapping("/login")
-    public ResponseEntity<RefreshTokenService.TokenPair> login(@Valid @RequestBody   request) {
+    public ResponseEntity<RefreshTokenService.TokenPair> login(@Valid @RequestBody LoginRequest request) {
         if (request.password().getBytes(StandardCharsets.UTF_8).length > 72) {
             throw new BadCredentialsException("Invalid credentials");
         }

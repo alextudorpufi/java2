@@ -1,4 +1,23 @@
 spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+        max.block.ms: 10000
+    consumer:
+      group-id: vros-acknowledgments-v1
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
+      auto-startup: ${OPTIMIZATION_LISTENERS_ENABLED:true}
   profiles:
     default: prod
   application:
@@ -25,6 +44,10 @@ spring:
       mode: never
 
 app:
+  optimization:
+    request-topic: vrp.optimization.requests.v1
+    ack-topic: vrp.optimization.acknowledgments.v1
+    dispatch-delay-ms: 2000
   jwt:
     secret: ${JWT_SECRET:}
     issuer: javaLab4
